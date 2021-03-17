@@ -1,4 +1,4 @@
-from multiprocessing import Manager, Process
+from multiprocessing import Manager, cpu_count, Pool
 
 
 def multi(res: list, mt1, mt2, a: int, b: int, c: int):
@@ -6,6 +6,13 @@ def multi(res: list, mt1, mt2, a: int, b: int, c: int):
 
 
 def multiply_matrix(mtx1, mtx2):
+
+    if not mtx2 or not mtx1:
+        raise ValueError('Invalid value of matrix')
+
+    if len(mtx1[0]) != len(mtx2):
+        raise ValueError('this matrix can not be multiplied')
+
     proc_list = []
     c = [Manager().list([0 for row in range(len(mtx2[0]))]) for col in
          range(len(mtx1))]
@@ -14,13 +21,9 @@ def multiply_matrix(mtx1, mtx2):
     for i in range(len(mtx1)):
         for j in range(len(mtx2[0])):
             for k in range(len(mtx2)):
-                p = Process(target=multi, args=(result, mtx1, mtx2, i, j, k))
-                proc_list.append(p)
+                proc_list.append((result, mtx1, mtx2, i, j, k))
 
-    for pc in proc_list:
-        pc.start()
-
-    for pc in proc_list:
-        pc.join()
+    with Pool(cpu_count()) as pool:
+        pool.starmap(multi, proc_list)
 
     return [list(elem) for elem in result]
