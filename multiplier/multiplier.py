@@ -1,8 +1,10 @@
 from multiprocessing import Manager, cpu_count, Pool
 
 
-def multi(res: list, mt1, mt2, a: int, b: int, c: int):
+def multi(res: list, mt1, mt2, a: int, b: int, c: int, l):
+    l.acquire()
     res[a][b] += mt1[a][c] * mt2[c][b]
+    l.release()
 
 
 def multiply_matrix(mtx1, mtx2):
@@ -17,11 +19,12 @@ def multiply_matrix(mtx1, mtx2):
     c = [Manager().list([0 for row in range(len(mtx2[0]))]) for col in
          range(len(mtx1))]
     result = Manager().list(c)
+    lock = Manager().Lock()
 
     for i in range(len(mtx1)):
         for j in range(len(mtx2[0])):
             for k in range(len(mtx2)):
-                proc_list.append((result, mtx1, mtx2, i, j, k))
+                proc_list.append((result, mtx1, mtx2, i, j, k, lock))
 
     with Pool(cpu_count()) as pool:
         pool.starmap(multi, proc_list)

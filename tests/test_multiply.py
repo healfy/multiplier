@@ -33,3 +33,10 @@ def test_multiply_empty_matrix1():
 
 def test_multiply__matrix2():
     assert [[2]] == multiply_matrix([[1]], [[2]])
+
+
+def test_multi1():
+    a = 30
+    mt1 = [[1 for i in range(a)] for i in range(a)]
+    res = [[a for _ in range(a)] for i in range(a)]
+    assert res == multiply_matrix(mt1, mt1)
