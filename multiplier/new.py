@@ -2,6 +2,8 @@ import multiprocessing as mp
 import math
 from queue import Empty
 
+mp.set_start_method('spawn')
+
 
 class Multiprocessor:
 
@@ -12,33 +14,36 @@ class Multiprocessor:
         self.matrix2 = mtx2
         self.running = True
         self.process_number = process_number
+        self.res = [
+            [0 for row in range(len(self.matrix2[0]))]
+            for col in range(len(self.matrix1))
+        ]
 
-    @staticmethod
-    def _wrapper(func, queue: mp.Queue, chunk, mtx1, mtx2):
+    def get_chunks(self):
+        return [(row, col) for row in range(len(self.matrix1))
+                for col in range(len(self.matrix2[0]))]
+
+    def _wrapper(self, chunk):
         for elem in chunk:
-            queue.put(func(mtx1, mtx2, *elem))
+            self.queue.put(self.multi(*elem))
 
-    def run(self, array: list):
-        for ch in self.chunks(array, self.process_number):
-            args2 = (self.multi, self.queue, ch, self.matrix1, self.matrix2)
-            p = mp.Process(target=self._wrapper, args=args2)
+    def run(self):
+        for ch in self.chunks(self.get_chunks(), self.process_number):
+            p = mp.Process(target=self._wrapper, args=(ch,))
             self.processes.append(p)
             p.start()
 
     def wait(self):
-        rets = [
-            [0 for row in range(len(self.matrix2[0]))]
-            for col in range(len(self.matrix1))
-        ]
         while self.running:
             try:
-                indx, value = self.queue.get()
-                rets[indx[0]][indx[1]] = value
+                indx, value = self.queue.get(timeout=0.05)
+                self.res[indx[0]][indx[1]] = value
+                self.queue.task_done()
             except Empty:
                 self.running = False
         for p in self.processes:
             p.join()
-        return rets
+        return self.res
 
     @staticmethod
     def chunks(lst, n):
@@ -47,9 +52,12 @@ class Multiprocessor:
             end = i + step if i + step < len(lst) else len(lst)
             yield lst[i:end]
 
-    @staticmethod
-    def multi(mtx1, mtx2, a, b, c):
-        return (a, b), mtx1[a][c] * mtx2[c][b]
+    def multi(self, row, col):
+        res = sum(
+            [self.matrix1[row][z] * self.matrix2[z][col]
+             for z in range(len(self.matrix1[0]))]
+        )
+        return (row, col), res
 
 
 def one_thread(mtx1, mtx2):

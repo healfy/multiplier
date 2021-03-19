@@ -1,5 +1,6 @@
 import pytest
 from multiplier import multiply_matrix
+from multiplier.new import Multiprocessor
 
 
 def test_multiply_quad_matrix():
@@ -36,7 +37,11 @@ def test_multiply__matrix2():
 
 
 def test_multi1():
-    a = 30
+    a = 300
     mt1 = [[1 for i in range(a)] for i in range(a)]
     res = [[a for _ in range(a)] for i in range(a)]
     assert res == multiply_matrix(mt1, mt1)
+
+    # obj = Multiprocessor(mt1, mt1, process_number=4)
+    # obj.run()
+    # assert res == obj.wait()
