@@ -2,14 +2,12 @@ import multiprocessing as mp
 import math
 from queue import Empty
 
-mp.set_start_method('spawn')
-
 
 class Multiprocessor:
 
     def __init__(self, mtx1: list, mtx2: list, process_number=1):
         self.processes = []
-        self.queue = mp.Manager().Queue()
+        self.queue = mp.JoinableQueue()
         self.matrix1 = mtx1
         self.matrix2 = mtx2
         self.running = True
@@ -67,4 +65,3 @@ def one_thread(mtx1, mtx2):
             for k in range(len(mtx2)):
                 c[i][j] += mtx1[i][k] * mtx2[k][j]
     return c
-
